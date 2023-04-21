@@ -9,6 +9,6 @@ cd dist
 git init
 git add -A
 git commit -m 'New Deployment'
-git push -f https://github.com/drakou111/speedcrafting.git gh-pages
+git push -f https://github.com/drakou111/speedcrafting.git master:gh-pages
 
 cd -
