@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <h1>Vue.js test</h1>
+    <h1>Fun!</h1>
   </div>
 </template>
 
