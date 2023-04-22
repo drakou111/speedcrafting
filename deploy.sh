@@ -5,6 +5,7 @@ set -e
 npm run build
 
 cd dist
+cp ../CNAME .
 
 git init
 git add -A
