@@ -10,21 +10,10 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { mainService } from '../services/mainService';
 
 export default {
   computed: {
     ...mapGetters(['isAuthenticated']),
-  },
-  methods: {
-    async logout() {
-      await mainService.logout();
-    },
-  },
-  watch: {
-    isAuthenticated() {
-      // update the navbar
-    },
-  },
+  }
 };
 </script>

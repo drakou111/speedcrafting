@@ -2,7 +2,7 @@ import { createStore } from 'vuex';
 
 export default createStore({
   state: {
-    isAuthenticated: false,
+    isAuthenticated: !!document.cookie.split('; ').find(row => row.startsWith('user_id='))
   },
   mutations: {
     setIsAuthenticated(state, isAuthenticated) {

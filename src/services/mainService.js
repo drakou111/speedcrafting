@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, runTransaction, set, push } from "firebase/database";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import store from '../stores/store';
 import { useToast } from 'vue-toast-notification'
 
@@ -100,6 +100,7 @@ async function login(email, password) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password)
         const user = userCredential.user;
         store.dispatch('login');
+        setCookie("user_id", user.uid, 2)
         return user
     } catch (error) {
         useToast().open({
@@ -111,11 +112,24 @@ async function login(email, password) {
     }
 }
 
+function setCookie(name, value, hours) {
+    let expires = "";
+    if (hours) {
+      let date = new Date();
+      date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
+      expires = "; expires=" + date.toUTCString();
+    }
+    console.log(name + "=" + (value || "")  + expires + "; path=/")
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+  }
+
+
 async function signup(email, password) {
     const auth = getAuth();
     try {
         
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await login(email, password)
         return userCredential.user;
     } catch (error) {
         useToast().open({
@@ -127,20 +141,33 @@ async function signup(email, password) {
     }
 }
 
+async function getUser() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, (user) => {
+      resolve(user);
+    });
+  });
+}
 
 async function isLoggedIn() {
-    return new Promise((resolve) => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            unsubscribe();
-            resolve(!!user);
-        });
-    });
+  const user_id = document.cookie.split('; ')
+    .find(row => row.startsWith('user_id='))
+    ?.split('=')[1];
+
+  if (user_id) {
+    const user = await getUser();
+    return !!user;
+  }
+  
+  return false;
 }
+
 
 async function logout() {
     try {
         await auth.signOut();
         store.dispatch('logout');
+        document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         return true;
     } catch (error) {
         useToast().open({
@@ -163,5 +190,7 @@ export const mainService = {
     signup,
     isLoggedIn,
     logout,
+    setCookie,
+    getUser,
     auth
 };

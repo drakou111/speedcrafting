@@ -32,7 +32,7 @@ export default {
             try {
                 const auth = getAuth();
                 await createUserWithEmailAndPassword(auth, this.email, this.password);
-                router.push({ name: "Login" });
+                router.push({ name: "Home" });
             } catch (error) {
                 useToast().open({
                     type: 'warning',

@@ -5,10 +5,9 @@ import App from './App.vue'
 import router from './router'
 import { mainService } from './services/mainService';
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-    const isAuthenticated = mainService.auth.currentUser;
-  
+    const isAuthenticated = await mainService.isLoggedIn();
     if (requiresAuth && !isAuthenticated) {
       next('/login');
     } else {
