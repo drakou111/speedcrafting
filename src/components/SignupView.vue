@@ -4,21 +4,21 @@
             <h1>Sign up</h1>
             <div>
                 <label>Email:</label>
-                <input type="email" v-model="email" required>
+                <input type="email" v-model="email" required />
             </div>
             <div>
                 <label>Password:</label>
-                <input type="password" v-model="password" required>
+                <input type="password" v-model="password" required />
             </div>
             <button type="submit">Sign Up</button>
         </form>
     </div>
 </template>
-  
+
 <script>
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import router from '../router'
-import { useToast } from 'vue-toast-notification'
+import router from "../router";
+import { useToast } from "vue-toast-notification";
 
 export default {
     data() {
@@ -30,18 +30,29 @@ export default {
     methods: {
         async onSignup() {
             try {
-                const auth = getAuth();
-                await createUserWithEmailAndPassword(auth, this.email, this.password);
-                router.push({ name: "Home" });
+                if (this.email.length > 100 || this.password.length > 100) {
+                    useToast().open({
+                        type: "warning",
+                        message: "email or password too long",
+                        duration: 6000,
+                    });
+                } else {
+                    const auth = getAuth();
+                    await createUserWithEmailAndPassword(
+                        auth,
+                        this.email,
+                        this.password
+                    );
+                    router.push({ name: "Home" });
+                }
             } catch (error) {
                 useToast().open({
-                    type: 'warning',
+                    type: "warning",
                     message: error.message,
-                   duration: 6000
-                })
+                    duration: 6000,
+                });
             }
         },
     },
 };
 </script>
-  
