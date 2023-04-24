@@ -60,6 +60,7 @@ export default {
                 { content: null },
                 { content: null },
             ],
+            dragSlots: [],
             currentItem: null,
             mousePosition: { x: 0, y: 0 },
         };
@@ -149,7 +150,7 @@ export default {
                     }
                     } else {
                         //Click not same item with item in hand
-                        //idk what actually happens lol
+                        //We do nothing
                     }
                 }
             }
@@ -167,7 +168,11 @@ export default {
             // Use require to dynamically load the image based on the item's image attribute
             return require(`../assets/items/${this.currentItem.name}.png`);
         },
-    },
+    },mounted() {
+  document.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+}
 };
 </script>
 <style scoped>
@@ -193,7 +198,7 @@ export default {
 }
 
 .slot:hover {
-    background-color: rgb(200, 200, 200);
+    background-image: url("../assets/slot_light.png");
 }
 
 .held-item {
@@ -232,7 +237,7 @@ export default {
     position: absolute;
     bottom: 0;
     right: 0;
-    color: white; /* Change this to your desired color */
+    color: white;
     z-index: 1;
     transform: translate(-12.4%, -10.1%);
     font-size: 37px;
