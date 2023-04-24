@@ -1,6 +1,6 @@
 <template>
-    <div class="item">
-      <img :src="imageSrc" alt="" />
+    <div>
+      <img :src="imageSrc" alt="itemImage" class="item"/>
     </div>
   </template>
   
@@ -15,7 +15,7 @@
     computed: {
       imageSrc() {
         // Use require to dynamically load the image based on the item's image attribute
-        return require(`../assets/items/${this.item.image}`);
+        return require(`../assets/items/${this.item.name}.png`);
       },
     },
   };
@@ -25,6 +25,7 @@
   .item {
     width: 100%;
     height: 100%;
+    image-rendering: pixelated;
   }
   </style>
   

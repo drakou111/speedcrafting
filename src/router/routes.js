@@ -4,7 +4,7 @@ import HomeView from "../components/HomeView.vue";
 import SettingsView from "../components/SettingsView.vue";
 import Logout from "../components/LogoutView.vue";
 import NotFound from "../components/NotFoundView.vue";
-import Profil from "../components/ProfilView.vue";
+import Profile from "../components/ProfileView.vue";
 
 const routes = [
     {
@@ -24,9 +24,9 @@ const routes = [
         },
     },
     {
-        path: "/profil",
-        name: "Profil",
-        component: Profil,
+        path: "/profile",
+        name: "Profile",
+        component: Profile,
         meta: {
             requiresAuth: true,
         },

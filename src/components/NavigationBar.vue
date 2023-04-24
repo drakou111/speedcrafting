@@ -9,8 +9,8 @@
         <RouterLink v-if="isAuthenticated" :to="{ name: 'Logout' }"
             >Logout</RouterLink
         >
-        <RouterLink v-if="isAuthenticated" :to="{ name: 'Profil' }"
-            >Profil</RouterLink
+        <RouterLink v-if="isAuthenticated" :to="{ name: 'Profile' }"
+            >Profile</RouterLink
         >
         <RouterLink v-if="!isAuthenticated" :to="{ name: 'Login' }"
             >Login</RouterLink
