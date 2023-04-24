@@ -147,6 +147,7 @@ export default {
     background-image: url("../assets/slot.png");
     background-size: cover;
     user-select: none;
+    image-rendering: pixelated;
 }
 
 .slot:hover {
