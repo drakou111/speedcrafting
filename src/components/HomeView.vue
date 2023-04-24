@@ -12,7 +12,10 @@
                     class="item-count"
                     v-if="slot.content && slot.content.count"
                 >
-                    {{ slot.content.count }}
+                    <div class="shadow-item-count">
+                        {{ slot.content.count }}
+                    </div>
+                    <div class="main-item-count">{{ slot.content.count }}</div>
                 </div>
             </div>
         </div>
@@ -25,7 +28,8 @@
         >
             <img :src="imageSrc" alt="" class="item" />
             <div class="item-count" v-if="currentItem && currentItem.count">
-                {{ currentItem.count }}
+                <div class="shadow-item-count">{{ currentItem.count }}</div>
+                <div class="main-item-count">{{ currentItem.count }}</div>
             </div>
         </div>
 
@@ -141,7 +145,11 @@ export default {
     width: 64px;
     height: 64px;
     border: 1px solid black;
-    background-color: grey;
+    background-color: rgb(139, 140, 137);
+}
+
+.slot:hover {
+    background-color: rgb(200, 200, 200);
 }
 
 .held-item {
@@ -155,19 +163,35 @@ export default {
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
-
 }
 
 .item-count {
     bottom: 0;
     right: 0;
     padding: 2px;
-    font-size: 25px;
+    font-size: 37px;
     text-align: right;
     box-sizing: border-box;
-    transform: translate(0%, -70%);
+    transform: translate(9.3%, -69%);
     font-family: MinecraftRegular;
-    color: black;
+}
+
+.main-item-count {
+    color: rgb(63, 63, 63);
+    font-size: 37px;
+    font-family: MinecraftRegular;
+    z-index: 2;
+}
+
+.shadow-item-count {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    color: white; /* Change this to your desired color */
+    z-index: 1;
+    transform: translate(-12.4%, -10.1%);
+    font-size: 37px;
+    font-family: MinecraftRegular;
 }
 
 @font-face {
