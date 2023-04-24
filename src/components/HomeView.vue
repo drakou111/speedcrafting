@@ -138,14 +138,15 @@ export default {
 .crafting-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-gap: 10px;
+    grid-gap: 0px;
 }
 
 .slot {
     width: 64px;
     height: 64px;
-    border: 1px solid black;
-    background-color: rgb(139, 140, 137);
+    background-image: url("../assets/slot.png");
+    background-size: cover;
+    user-select: none;
 }
 
 .slot:hover {
@@ -181,6 +182,7 @@ export default {
     font-size: 37px;
     font-family: MinecraftRegular;
     z-index: 2;
+    user-select: none;
 }
 
 .shadow-item-count {
@@ -192,6 +194,7 @@ export default {
     transform: translate(-12.4%, -10.1%);
     font-size: 37px;
     font-family: MinecraftRegular;
+    user-select: none;
 }
 
 @font-face {

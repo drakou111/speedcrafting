@@ -26,6 +26,7 @@
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
+    user-select: none;
   }
   </style>
   
