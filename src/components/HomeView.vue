@@ -6,6 +6,7 @@
                 :key="index"
                 class="slot"
                 @click="onSlotClick(index)"
+                @contextmenu.prevent="onSlotRightClick(index)"
             >
                 <item v-if="slot.content" :item="slot.content" />
                 <div
@@ -108,6 +109,47 @@ export default {
                         const clickedSlotContent = this.slots[index].content;
                         this.slots[index].content = this.currentItem;
                         this.currentItem = clickedSlotContent;
+                    }
+                }
+            }
+        },
+        onSlotRightClick(index){
+            if (this.currentItem === null) {
+                //Click item with empty hand
+                const clickedSlotContent = this.slots[index].content;
+                if (clickedSlotContent !== null) {
+                    const count = clickedSlotContent.count / 2.0
+                    // Pick up the item from the slot
+                    this.currentItem = Object.assign({}, clickedSlotContent);
+
+                    this.currentItem.count = Math.ceil(count)
+                    this.slots[index].content.count = Math.floor(count)
+
+                    if (this.slots[index].content.count <= 0) {
+                        this.slots[index].content = null;
+                    }
+                }
+            } else {
+                const clickedSlotContent = this.slots[index].content;
+                if (clickedSlotContent === null) {
+                    //Click empty slot with item in hand
+                    this.slots[index].content = Object.assign({}, this.currentItem);
+                    this.slots[index].content.count = 1;
+                    this.currentItem.count--;
+                    if (this.currentItem.count <= 0) {
+                        this.currentItem = null;
+                    }
+                } else {
+                    if (clickedSlotContent.name === this.currentItem.name){
+                        //Click item with item in hand
+                        this.slots[index].content.count++;
+                        this.currentItem.count--;
+                        if (this.currentItem.count <= 0) {
+                        this.currentItem = null;
+                    }
+                    } else {
+                        //Click not same item with item in hand
+                        //idk what actually happens lol
                     }
                 }
             }
