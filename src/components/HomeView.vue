@@ -1,13 +1,11 @@
 <template>
-    <div @mousemove="onMouseMove" class="crafting-container">
+    <div
+        @mousemove="onMouseMove"
+        class="crafting-container"
+        id="crafting-container"
+    >
         <div class="crafting-grid">
-            <div
-                v-for="(slot, index) in slots"
-                :key="index"
-                class="slot"
-                @click="onSlotClick(index)"
-                @contextmenu.prevent="onSlotRightClick(index)"
-            >
+            <div v-for="(slot, index) in slots" :key="index" class="slot">
                 <item v-if="slot.content" :item="slot.content" />
                 <div
                     class="item-count"
@@ -60,9 +58,14 @@ export default {
                 { content: null },
                 { content: null },
             ],
-            dragSlots: [],
             currentItem: null,
             mousePosition: { x: 0, y: 0 },
+
+            dragSlots: [],
+            slotIndex: null,
+
+            leftDown: false,
+            rightDown: false,
         };
     },
     methods: {
@@ -71,90 +74,82 @@ export default {
             this.slots[0].content = newItem;
             this.newItemName = "";
         },
-        onSlotClick(index) {
+
+        leftClickDown() {
+            this.leftDown = true;
+        },
+
+        leftClickUp() {
+            this.leftDown = false;
+            this.dragSlots = [];
             if (this.currentItem === null) {
-                // Clicked on an empty slot with no item in hand
-                const clickedSlotContent = this.slots[index].content;
-                if (clickedSlotContent !== null) {
-                    // Pick up the item from the slot
-                    this.currentItem = clickedSlotContent;
-                    this.slots[index].content = null;
+                if (this.slotIndex !== null) {
+                    //Left click (slot item, no hand item)
+                    this.currentItem = this.slots[this.slotIndex].content;
+                    this.slots[this.slotIndex].content = null;
                 }
-            } else {
-                // Clicked on an empty slot with an item in hand
-                if (this.slots[index].content === null) {
-                    // Put the item in the slot
-                    this.slots[index].content = this.currentItem;
-                    this.currentItem = null;
-                } else {
-                    // Clicked on a non-empty slot with an item in hand
+            }
+        },
 
-                    if (
-                        this.slots[index].content.name === this.currentItem.name
-                    ) {
-                        //Add values together
-                        this.slots[index].content.count +=
-                            this.currentItem.count;
-                        this.currentItem.count = 0;
-                        if (this.slots[index].content.count > 64) {
-                            this.currentItem.count =
-                                this.slots[index].content.count - 64;
-                            this.slots[index].content.count = 64;
-                        }
+        rightClickDown() {
+            this.rightDown = true;
+        },
 
-                        if (this.currentItem.count <= 0) {
-                            this.currentItem = null;
-                        }
-                    } else {
-                        //Swap the items if they are not the same
-                        const clickedSlotContent = this.slots[index].content;
-                        this.slots[index].content = this.currentItem;
-                        this.currentItem = clickedSlotContent;
+        rightClickUp() {
+            this.rightDown = false;
+            this.dragSlots = [];
+            if (this.currentItem === null) {
+                if (this.slotIndex !== null) {
+                    //Right click (slot item, no hand item)
+                    let count = this.slots[this.slotIndex].content.count;
+                    this.currentItem = {
+                        ...this.slots[this.slotIndex].content,
+                    };
+                    this.currentItem.count = Math.ceil(count / 2.0);
+                    this.slots[this.slotIndex].content.count = Math.floor(
+                        count / 2.0
+                    );
+
+                    if (this.slots[this.slotIndex].content.count <= 0) {
+                        this.slots[this.slotIndex].content = null;
                     }
                 }
             }
         },
-        onSlotRightClick(index){
-            if (this.currentItem === null) {
-                //Click item with empty hand
-                const clickedSlotContent = this.slots[index].content;
-                if (clickedSlotContent !== null) {
-                    const count = clickedSlotContent.count / 2.0
-                    // Pick up the item from the slot
-                    this.currentItem = Object.assign({}, clickedSlotContent);
 
-                    this.currentItem.count = Math.ceil(count)
-                    this.slots[index].content.count = Math.floor(count)
+        handleSlotHover(event) {
+            const slot = event.target;
+            this.slotIndex = Array.from(slot.parentNode.children).indexOf(slot);
 
-                    if (this.slots[index].content.count <= 0) {
-                        this.slots[index].content = null;
-                    }
-                }
-            } else {
-                const clickedSlotContent = this.slots[index].content;
-                if (clickedSlotContent === null) {
-                    //Click empty slot with item in hand
-                    this.slots[index].content = Object.assign({}, this.currentItem);
-                    this.slots[index].content.count = 1;
+            if (this.rightDown && !this.dragSlots.includes(this.slotIndex)) {
+                this.dragSlots.push(this.slotIndex);
+            }
+        },
+
+        handleSlotOut() {
+            console.log(this.slotIndex)
+            if (this.rightDown && this.currentItem !== null) {
+                if (this.slots[this.slotIndex].content === null) {
+                    this.slots[this.slotIndex].content = {...this.currentItem}
+                    this.slots[this.slotIndex].content.count = 1;
                     this.currentItem.count--;
-                    if (this.currentItem.count <= 0) {
-                        this.currentItem = null;
-                    }
-                } else {
-                    if (clickedSlotContent.name === this.currentItem.name){
-                        //Click item with item in hand
-                        this.slots[index].content.count++;
-                        this.currentItem.count--;
-                        if (this.currentItem.count <= 0) {
-                        this.currentItem = null;
-                    }
-                    } else {
-                        //Click not same item with item in hand
-                        //We do nothing
-                    }
+                } else if (
+                    this.slots[this.slotIndex].content.name === this.currentItem.name &&
+                    this.slots[this.slotIndex].content.count < 64
+                ) {
+                    this.slots[this.slotIndex].content.count++;
+                    this.currentItem.count--;
+                }
+
+
+                if (this.currentItem.count <= 0) {
+                    this.currentItem = null;
                 }
             }
+            this.slotIndex = null;
+            //console.log(this.slotIndex)
         },
+
         onMouseMove(event) {
             const container = this.$el.getBoundingClientRect();
             const x = event.clientX - container.left;
@@ -168,11 +163,34 @@ export default {
             // Use require to dynamically load the image based on the item's image attribute
             return require(`../assets/items/${this.currentItem.name}.png`);
         },
-    },mounted() {
-  document.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-  });
-}
+    },
+    mounted() {
+        document.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+        });
+
+        const slots = document.querySelectorAll(".slot");
+        slots.forEach((slot) => {
+            slot.addEventListener("mouseover", this.handleSlotHover);
+            slot.addEventListener("mouseout", this.handleSlotOut);
+        });
+
+        document.addEventListener("mousedown", (event) => {
+            if (event.button == 0) {
+                this.leftClickDown(event);
+            } else if (event.button == 2) {
+                this.rightClickDown(event);
+            }
+        });
+
+        document.addEventListener("mouseup", (event) => {
+            if (event.button == 0) {
+                this.leftClickUp(event);
+            } else if (event.button == 2) {
+                this.rightClickUp(event);
+            }
+        });
+    },
 };
 </script>
 <style scoped>
@@ -221,6 +239,7 @@ export default {
     font-size: 37px;
     text-align: right;
     box-sizing: border-box;
+    pointer-events: none;
     transform: translate(9.3%, -69%);
     font-family: MinecraftRegular;
 }
@@ -230,6 +249,7 @@ export default {
     font-size: 37px;
     font-family: MinecraftRegular;
     z-index: 2;
+    pointer-events: none;
     user-select: none;
 }
 
