@@ -5,7 +5,18 @@
         id="crafting-container"
     >
         <div class="crafting-grid">
-            <div v-for="(slot, index) in slots" :key="index" class="slot">
+            <div
+                v-for="(slot, index) in slots"
+                :key="index"
+                class="slot"
+                :class="{
+                    halfhover:
+                        (this.leftDragSlots.includes(index) &&
+                            this.leftDragSlots.length > 1) ||
+                        (this.rightDragSlots.includes(index) &&
+                            this.rightDragSlots.length > 1),
+                }"
+            >
                 <item v-if="slot.content" :item="slot.content" />
                 <div
                     class="item-count"
@@ -14,10 +25,17 @@
                     <div
                         class="shadow-item-count"
                         v-if="slot.content.count > 1"
+                        :class="{ 'yellow-main-text': slot.content.count > 64 }"
                     >
                         {{ Math.min(slot.content.count, 64) }}
                     </div>
-                    <div class="main-item-count" v-if="slot.content.count > 1">
+                    <div
+                        class="main-item-count"
+                        v-if="slot.content.count > 1"
+                        :class="{
+                            'yellow-shadow-text': slot.content.count > 64,
+                        }"
+                    >
                         {{ Math.min(slot.content.count, 64) }}
                     </div>
                 </div>
@@ -95,10 +113,25 @@ export default {
                 this.leftDown = true;
             }
 
-            if (this.leftDown && this.currentItem !== null) {
-                this.itemCount = this.currentItem.count;
-                this.itemName = this.currentItem.name;
-                if (this.currentItem === null) {
+            //Item, no hand
+            if (
+                this.slotIndex != null &&
+                this.slots[this.slotIndex].content !== null &&
+                this.currentItem === null
+            ) {
+                this.currentItem = {
+                    ...this.slots[this.slotIndex].content,
+                };
+                this.slots[this.slotIndex].content = null;
+                this.cancelUp = true;
+                this.cancelDrag = true;
+            }
+
+            if (this.leftDown) {
+                if (this.currentItem !== null) {
+                    this.itemCount = this.currentItem.count;
+                    this.itemName = this.currentItem.name;
+                } else if (this.currentItem === null) {
                     this.cancelDrag = true;
                 }
             }
@@ -118,7 +151,11 @@ export default {
                 });
             }
 
-            if (this.leftDragSlots.length <= 0 && this.slotIndex !== null) {
+            if (
+                this.leftDragSlots.length <= 0 &&
+                this.slotIndex !== null &&
+                !this.cancelUp
+            ) {
                 //No item, hand
                 if (
                     this.slots[this.slotIndex].content === null &&
@@ -129,16 +166,7 @@ export default {
                     };
                     this.currentItem = null;
                 }
-                //Item, no hand
-                else if (
-                    this.slots[this.slotIndex].content !== null &&
-                    this.currentItem === null
-                ) {
-                    this.currentItem = {
-                        ...this.slots[this.slotIndex].content,
-                    };
-                    this.slots[this.slotIndex].content = null;
-                } //Item, hand
+                //Item, hand
                 else if (
                     this.slots[this.slotIndex].content !== null &&
                     this.currentItem !== null
@@ -245,7 +273,35 @@ export default {
             }
 
             //RIGHT CLICK
-            if (this.currentItem !== null) {
+
+            if (
+                this.rightDragSlots.length == 1 &&
+                this.currentItem !== null &&
+                !this.cancelDrag &&
+                this.rightDown
+            ) {
+                if (this.slots[this.rightDragSlots[0]].content === null) {
+                    this.slots[this.rightDragSlots[0]].content = {
+                        ...this.currentItem,
+                    };
+                    this.slots[this.rightDragSlots[0]].content.count = 1;
+                    this.currentItem.count--;
+                } else if (
+                    this.slots[this.rightDragSlots[0]].content.name ===
+                        this.currentItem.name &&
+                    this.slots[this.rightDragSlots[0]].content.count < 64
+                ) {
+                    this.slots[this.rightDragSlots[0]].content.count++;
+                    this.currentItem.count--;
+                }
+            }
+
+            //Empty the user's hand if count=0
+            if (this.currentItem !== null && this.currentItem.count <= 0) {
+                this.currentItem = null;
+            }
+
+            if (this.currentItem !== null && !this.cancelDrag) {
                 if (
                     this.rightDown &&
                     this.rightDragSlots.length > 0 &&
@@ -269,9 +325,43 @@ export default {
                 }
             }
 
+            //Empty the user's hand if count=0
+            if (this.currentItem !== null && this.currentItem.count <= 0) {
+                this.currentItem = null;
+            }
+
             //LEFT CLICK
             //
-            if (this.itemCount > 0) {
+
+            if (
+                this.leftDragSlots.length == 1 &&
+                this.currentItem !== null &&
+                !this.cancelDrag
+            ) {
+                if (this.slots[this.leftDragSlots[0]].content === null) {
+                    this.slots[this.leftDragSlots[0]].content = {
+                        ...this.currentItem,
+                    };
+                    this.currentItem = null;
+                } else {
+                    //No 'if' because program only pushs to dragArray if it has same name. So... (also don't have to check if >64)
+                    this.slots[this.leftDragSlots[0]].content.count +=
+                        this.currentItem.count;
+                    this.currentItem.count = 0;
+                    if (this.slots[this.leftDragSlots[0]].content.count > 64) {
+                        this.currentItem.count +=
+                            this.slots[this.leftDragSlots[0]] - 64;
+                        this.leftDragSlots = 64;
+                    }
+                }
+            }
+
+            //Empty the user's hand if count=0
+            if (this.currentItem !== null && this.currentItem.count <= 0) {
+                this.currentItem = null;
+            }
+
+            if (this.itemCount > 0 && !this.cancelDrag) {
                 if (
                     this.leftDown &&
                     this.leftDragSlots.length > 0 &&
@@ -287,43 +377,59 @@ export default {
                         this.itemCount / (this.leftDragSlots.length + 1)
                     );
 
-                    const difference = countBefore - countAfter; //Positive number
+                    if (countAfter <= 0) {
+                        this.cancelDrag = true;
+                    } else {
+                        const difference = countBefore - countAfter; //Positive number
 
-                    this.leftDragSlots.forEach((slotIndex) => {
-                        this.slots[slotIndex].content.count -= difference;
-                    });
+                        this.leftDragSlots.forEach((slotIndex) => {
+                            this.slots[slotIndex].content.count -= difference;
+                        });
 
-                    if (this.slots[this.slotIndex].content === null) {
-                        this.slots[this.slotIndex].content = {
+                        if (this.slots[this.slotIndex].content === null) {
+                            this.slots[this.slotIndex].content = {
+                                ...this.slots[this.leftDragSlots[0]].content,
+                            };
+                            this.slots[this.slotIndex].content.count =
+                                countAfter;
+                        } else {
+                            this.slots[this.slotIndex].content.count +=
+                                countAfter;
+                        }
+
+                        this.currentItem = {
                             ...this.slots[this.leftDragSlots[0]].content,
                         };
-                        this.slots[this.slotIndex].content.count = countAfter;
-                    } else {
-                        this.slots[this.slotIndex].content.count += countAfter;
+                        this.currentItem.count =
+                            this.itemCount -
+                            (this.leftDragSlots.length + 1) * countAfter +
+                            this.getOverflow();
                     }
-
-                    this.currentItem = {
-                        ...this.slots[this.leftDragSlots[0]].content,
-                    };
-                    this.currentItem.count =
-                        this.itemCount -
-                        (this.leftDragSlots.length + 1) * countAfter +
-                        this.getOverflow();
                 }
             }
 
             if (
                 !this.rightDragSlots.includes(this.slotIndex) &&
-                this.rightDown &&
-                this.rightDragSlots.length > 0 //This is to make sure that the start of the "drag" sequence starts on a "mouseout"
+                !this.cancelDrag &&
+                (this.slots[this.slotIndex].content === null ||
+                    (this.slots[this.slotIndex].content !== null &&
+                        this.currentItem !== null &&
+                        this.slots[this.slotIndex].content.name ===
+                            this.currentItem.name)) &&
+                this.rightDown
             ) {
                 this.rightDragSlots.push(this.slotIndex);
             }
 
             if (
                 !this.leftDragSlots.includes(this.slotIndex) &&
-                this.leftDown &&
-                this.leftDragSlots.length > 0
+                !this.cancelDrag &&
+                (this.slots[this.slotIndex].content === null ||
+                    (this.slots[this.slotIndex].content !== null &&
+                        this.currentItem !== null &&
+                        this.slots[this.slotIndex].content.name ===
+                            this.currentItem.name)) &&
+                this.leftDown
             ) {
                 this.leftDragSlots.push(this.slotIndex);
             }
@@ -334,14 +440,6 @@ export default {
             }
         },
 
-        //The way that the left click drag works is:
-        //Remember what the original number of items in hand was
-        //Add to all of the selected slots floor(that number / number of slots)
-        //Take that number and set the current hold number to original number % that number
-        //So lets say you have 64 and want to split into 3 slots, each slot will have floor(64/3) (which is 21)
-        //and the held item will be 64%21, which is 1
-        //After that, looks through all of the stacks of item that have > than 64 items
-        //Add up how much overflow they have, and add it to the hold number.
         getOverflow() {
             let sum = 0;
             this.slots.forEach((slot) => {
@@ -353,60 +451,14 @@ export default {
         },
 
         handleSlotOut() {
-            //RIGHT CLICK
-            if (this.currentItem !== null && !this.cancelDrag) {
-                if (
-                    this.rightDown &&
-                    this.rightDragSlots.length <= 0 &&
-                    !this.rightDragSlots.includes(this.slotIndex)
-                ) {
-                    if (
-                        this.slots[this.slotIndex].content !== null &&
-                        this.slots[this.slotIndex].content.name ===
-                            this.currentItem.name &&
-                        this.slots[this.slotIndex].content.count < 64
-                    ) {
-                        this.slots[this.slotIndex].content.count++;
-                        this.currentItem.count--;
-                    } else if (this.slots[this.slotIndex].content === null) {
-                        this.slots[this.slotIndex].content = {
-                            ...this.currentItem,
-                        };
-                        this.slots[this.slotIndex].content.count = 1;
-                        this.currentItem.count--;
-                    }
-                }
-            }
-
-            //LEFT CLICK
-            //
-
-            if (this.currentItem !== null && !this.cancelDrag) {
-                if (
-                    this.leftDown &&
-                    this.leftDragSlots.length <= 0 &&
-                    !this.leftDragSlots.includes(this.slotIndex)
-                ) {
-                    if (this.slots[this.slotIndex].content === null) {
-                        this.slots[this.slotIndex].content = {
-                            ...this.currentItem,
-                        };
-                        this.currentItem.count = 0;
-                    } else if (
-                        this.slots[this.slotIndex].content.name ===
-                        this.currentItem.name
-                    ) {
-                        this.slots[this.slotIndex].content.count +=
-                            this.currentItem.count;
-                        this.currentItem.count = 0;
-                    }
-                }
-            }
-
             if (
-                !this.rightDragSlots.includes(
-                    this.slotIndex && !this.cancelDrag
-                ) &&
+                !this.rightDragSlots.includes(this.slotIndex) &&
+                !this.cancelDrag &&
+                (this.slots[this.slotIndex].content === null ||
+                    (this.slots[this.slotIndex].content !== null &&
+                        this.currentItem !== null &&
+                        this.slots[this.slotIndex].content.name ===
+                            this.currentItem.name)) &&
                 this.rightDown
             ) {
                 this.rightDragSlots.push(this.slotIndex);
@@ -414,8 +466,13 @@ export default {
 
             if (
                 !this.leftDragSlots.includes(this.slotIndex) &&
-                this.leftDown &&
-                !this.cancelDrag
+                !this.cancelDrag &&
+                (this.slots[this.slotIndex].content === null ||
+                    (this.slots[this.slotIndex].content !== null &&
+                        this.currentItem !== null &&
+                        this.slots[this.slotIndex].content.name ===
+                            this.currentItem.name)) &&
+                this.leftDown
             ) {
                 this.leftDragSlots.push(this.slotIndex);
             }
@@ -493,6 +550,10 @@ export default {
     image-rendering: pixelated;
 }
 
+.halfhover {
+    background-image: url("../assets/slot_mid.png");
+}
+
 .slot:hover {
     background-image: url("../assets/slot_light.png");
 }
@@ -543,6 +604,15 @@ export default {
     font-size: 37px;
     font-family: MinecraftRegular;
     user-select: none;
+    pointer-events: none;
+}
+
+.yellow-main-text {
+    color: rgb(252, 252, 84);
+}
+
+.yellow-shadow-text {
+    color: rgb(62, 62, 21);
 }
 
 @font-face {
