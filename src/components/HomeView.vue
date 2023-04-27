@@ -229,6 +229,17 @@ export default {
         rightClickUp() {
             this.rightDown = false;
 
+            if (!this.cancelDrag) {
+                this.rightDragSlots.forEach((index) => {
+                    if (
+                        this.slots[index].content !== null &&
+                        this.slots[index].content.count > 64
+                    ) {
+                        this.slots[index].content.count = 64;
+                    }
+                });
+            }
+
             if (
                 this.slotIndex !== null &&
                 this.currentItem !== null &&
@@ -310,10 +321,10 @@ export default {
                     if (
                         this.slots[this.slotIndex].content !== null &&
                         this.slots[this.slotIndex].content.name ===
-                            this.currentItem.name &&
-                        this.slots[this.slotIndex].content.count < 64
+                            this.currentItem.name
                     ) {
                         this.slots[this.slotIndex].content.count++;
+                        this.currentItem.count += this.getOverflow();
                         this.currentItem.count--;
                     } else if (this.slots[this.slotIndex].content === null) {
                         this.slots[this.slotIndex].content = {
