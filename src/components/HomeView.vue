@@ -75,15 +75,15 @@ export default {
     data() {
         return {
             slots: [
-                { content: { name: "apple", count: 16 } },
-                { content: null },
-                { content: null },
-                { content: null },
-                { content: null },
-                { content: null },
-                { content: null },
-                { content: null },
-                { content: null },
+                { content: { name: "apple", count: 16 }, priority: 2 },
+                { content: null, priority: 2 },
+                { content: null, priority: 2 },
+                { content: null, priority: 2 },
+                { content: null, priority: 2 },
+                { content: null, priority: 2 },
+                { content: null, priority: 2 },
+                { content: null, priority: 2 },
+                { content: null, priority: 2 },
             ],
             currentItem: { name: "apple", count: 16, extra: 0 },
             mousePosition: { x: 0, y: 0 },
@@ -108,16 +108,22 @@ export default {
             this.newItemName = "";
         },
 
+        handleNormalShiftClick() {
+            return;
+        },
+
         leftClickDown() {
             if (!this.rightDown) {
                 this.leftDown = true;
             }
 
+
             //Item, no hand
             if (
                 this.slotIndex != null &&
                 this.slots[this.slotIndex].content !== null &&
-                this.currentItem === null
+                this.currentItem === null &&
+                this.leftDown
             ) {
                 this.currentItem = {
                     ...this.slots[this.slotIndex].content,
@@ -137,6 +143,23 @@ export default {
             }
         },
 
+        cancelLeftDrag() {
+            this.leftDragSlots.forEach((index) => {
+                this.slots[index].content.count--;
+            });
+            this.currentItem.name = this.itemName;
+            this.currentItem.count = this.itemCount;
+        },
+
+        cancelRightDrag() {
+            const count = Math.floor(this.itemCount / this.leftDragSlots.length);
+            this.leftDragSlots.forEach((index) => {
+                this.slots[index].content.count -= count;
+            });
+            this.currentItem.name = this.itemName;
+            this.currentItem.count = this.itemCount;
+        },
+
         leftClickUp() {
             this.leftDown = false;
 
@@ -154,7 +177,8 @@ export default {
             if (
                 this.leftDragSlots.length <= 0 &&
                 this.slotIndex !== null &&
-                !this.cancelUp
+                !this.cancelUp &&
+                !this.rightDown
             ) {
                 //No item, hand
                 if (
@@ -205,7 +229,8 @@ export default {
             if (
                 this.slotIndex != null &&
                 this.currentItem === null &&
-                this.slots[this.slotIndex].content !== null
+                this.slots[this.slotIndex].content !== null &&
+                this.rightDown
             ) {
                 const count = this.slots[this.slotIndex].content.count / 2.0;
                 this.currentItem = {
@@ -220,7 +245,8 @@ export default {
             if (
                 this.slotIndex !== null &&
                 this.slots[this.slotIndex].content !== null &&
-                this.slots[this.slotIndex].content.count <= 0
+                this.slots[this.slotIndex].content.count <= 0 &&
+                this.rightDown
             ) {
                 this.slots[this.slotIndex].content = null;
             }
@@ -244,7 +270,8 @@ export default {
                 this.slotIndex !== null &&
                 this.currentItem !== null &&
                 this.rightDragSlots.length <= 0 &&
-                !this.cancelUp
+                !this.cancelUp &&
+                !this.leftDown
             ) {
                 if (
                     this.slots[this.slotIndex].content !== null &&
@@ -339,6 +366,7 @@ export default {
             //Empty the user's hand if count=0
             if (this.currentItem !== null && this.currentItem.count <= 0) {
                 this.currentItem = null;
+                this.cancelDrag = true;
             }
 
             //LEFT CLICK
