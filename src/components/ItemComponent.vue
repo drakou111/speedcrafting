@@ -27,6 +27,7 @@
     height: 100%;
     image-rendering: pixelated;
     user-select: none;
+    pointer-events: none;
     opacity: 100%;
   }
   </style>

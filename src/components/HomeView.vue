@@ -563,6 +563,7 @@ export default {
     width: 64px;
     height: 64px;
     pointer-events: none;
+    user-select: none;
 }
 
 .item {
@@ -570,6 +571,7 @@ export default {
     height: 100%;
     pointer-events: none;
     image-rendering: pixelated;
+    user-select: none;
 }
 
 .item-count {
