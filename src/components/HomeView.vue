@@ -143,21 +143,27 @@ export default {
             }
         },
 
-        cancelLeftDrag() {
-            this.leftDragSlots.forEach((index) => {
+        cancelRightDrag() {
+            this.rightDragSlots.forEach((index) => {
                 this.slots[index].content.count--;
+                if (this.slots[index].content.count <= 0) {
+                  this.slots[index].content = null;
+                }
             });
-            this.currentItem.name = this.itemName;
-            this.currentItem.count = this.itemCount;
+            this.currentItem = {name: this.itemName, count: this.itemCount}
+            this.cancelDrag=true;
         },
 
-        cancelRightDrag() {
+        cancelLeftDrag() {
             const count = Math.floor(this.itemCount / this.leftDragSlots.length);
             this.leftDragSlots.forEach((index) => {
                 this.slots[index].content.count -= count;
+                if (this.slots[index].content.count <= 0) {
+                  this.slots[index].content = null;
+                }
             });
-            this.currentItem.name = this.itemName;
-            this.currentItem.count = this.itemCount;
+            this.currentItem = {name: this.itemName, count: this.itemCount}
+            this.cancelDrag=true;
         },
 
         leftClickUp() {
@@ -172,6 +178,10 @@ export default {
                         this.slots[index].content.count = 64;
                     }
                 });
+            }
+
+            if (this.rightDown && this.rightDragSlots.length > 0) {
+              this.cancelRightDrag();
             }
 
             if (
@@ -264,6 +274,10 @@ export default {
                         this.slots[index].content.count = 64;
                     }
                 });
+            }
+
+            if (this.leftDown && this.leftDragSlots.length > 0) {
+              this.cancelLeftDrag();
             }
 
             if (
