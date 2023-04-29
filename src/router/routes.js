@@ -5,6 +5,7 @@ import SettingsView from "../components/SettingsView.vue";
 import Logout from "../components/LogoutView.vue";
 import NotFound from "../components/NotFoundView.vue";
 import Profile from "../components/ProfileView.vue";
+import Craft from "../components/CraftView.vue"
 
 const routes = [
     {
@@ -45,6 +46,11 @@ const routes = [
         path: "/logout",
         name: "Logout",
         component: Logout,
+    },
+    {
+        path: "/craft",
+        name: "Craft",
+        component: Craft,
     },
     {
         path: "/:pathMatch(.*)*",
